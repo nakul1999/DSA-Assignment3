@@ -30,6 +30,15 @@ public class MinHeap {
         heapifyUp(heap.size() - 1);
     }
 
+/*
+
+This is the heapifyUp method , everytime we insert a new node to our heap,
+we compare the current child node with parent node and if the distance of the child node is
+lesser than the parent node,we swap them.
+
+we keep doing so until the heap is sorted.
+
+ */
     private void heapifyUp(int index) {
         while (index > 0 && distance(heap.get(index)) < distance(heap.get(parent(index)))) {
             swap(index, parent(index));
@@ -54,6 +63,15 @@ public class MinHeap {
     return null;
 }
 
+
+/*
+
+This is the heapify down method,
+here we compare the current node and compare it with the child nodes
+and make the swaps on basis of which value is shorter.
+
+we keep doing so until the minHeap is sorted.
+*/
     private void heapifyDown(int index) {
         int smallest = index;
         int left = leftChild(index);
