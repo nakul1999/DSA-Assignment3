@@ -1,5 +1,12 @@
 import java.util.List;
 
+/*
+
+This is the BruteForceMatcher, for ALL the drivers, 
+we will calculate the distance compared to the user coordatinates userX and UserY 
+and return the min distance.
+
+*/
 public class BruteForceMatcher {
 
     public static Driver findNearestDriver(List<Driver> drivers, double userX, double userY) {

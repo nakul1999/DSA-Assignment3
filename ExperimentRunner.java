@@ -3,8 +3,8 @@ import java.util.*;
 public class ExperimentRunner {
 
     public static void main(String[] args) {
-        int[] sizes = {50000, 10000, 1000, 5000};
-        int requests = 500; // simulate real system load
+        int[] sizes = {50000, 10000, 5000, 1000}; // number of drivers
+        int requests = 500; // we will be sending 500 requests
 
         Random rand = new Random();
 
@@ -25,7 +25,7 @@ public class ExperimentRunner {
             double userX = 50;
             double userY = 50;
 
-            // ---------------- HEAP APPROACH ----------------
+            // THE HEAP APPROACH
             RideMatchingSystem system = new RideMatchingSystem(userX, userY);
 
             for (Driver d : drivers1) {
@@ -40,7 +40,6 @@ public class ExperimentRunner {
 
             long heapEnd = System.nanoTime();
 
-            // ---------------- BRUTE FORCE ----------------
             long bruteStart = System.nanoTime();
 
             for (int i = 0; i < requests; i++) {
@@ -49,7 +48,7 @@ public class ExperimentRunner {
 
             long bruteEnd = System.nanoTime();
 
-            // ---------------- RESULTS ----------------
+            System.out.println("---------------------------------------");
             System.out.println("Drivers: " + size + ", Requests: " + requests);
             System.out.println("Heap Time (ms): " + (heapEnd - heapStart) / 1_000_000.0);
             System.out.println("Brute Force Time (ms): " + (bruteEnd - bruteStart) / 1_000_000.0);
