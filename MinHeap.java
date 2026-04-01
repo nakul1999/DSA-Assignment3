@@ -69,7 +69,6 @@ we keep doing so until the heap is sorted.
 This is the heapify down method,
 here we compare the current node and compare it with the child nodes
 and make the swaps on basis of which value is shorter.
-
 we keep doing so until the minHeap is sorted.
 */
     private void heapifyDown(int index) {

@@ -40,6 +40,7 @@ public class ExperimentRunner {
 
             long heapEnd = System.nanoTime();
 
+            // BRUTE FORCE APPROACH
             long bruteStart = System.nanoTime();
 
             for (int i = 0; i < requests; i++) {
