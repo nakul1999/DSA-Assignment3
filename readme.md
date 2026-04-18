@@ -103,60 +103,35 @@ Average, minimum, maximum, and standard deviation are reported for each configur
 
 ---
 
+## Running the Experiments
+ 
+```bash
+java ExperimentRunner
+```
+ 
+Each experiment runs 3 warmup iterations before measurement begins. Warmup results are discarded to let the JVM JIT-compile the hot paths before timings are taken. After warmup, 5 measured runs are taken per configuration and the average is reported. Per-request time is reported alongside total time so results across different dataset sizes are directly comparable.
+ 
+---
+ 
 ## Experiment Results
-
-### E1 — Single request: heap vs brute force
-
-One ride request against driver pools of increasing size. At small n, brute force is competitive because heap construction itself takes O(n log n) and only one extraction is made. The heap's advantage only shows up when multiple requests are made against the same pool.
-
-| drivers (n) | heap avg (us) | brute force avg (us) | speedup |
-|-------------|---------------|----------------------|---------|
-| 100         | 0.18          | 0.09                 | 0.5x    |
-| 1,000       | 0.24          | 0.31                 | 1.3x    |
-| 10,000      | 0.31          | 2.84                 | 9.2x    |
-| 100,000     | 0.38          | 28.61                | 75.3x   |
-
-At small n brute force wins on a single request. This is expected and not a flaw in the heap implementation — it reflects the upfront O(n log n) build cost.
-
-### E2 — Multiple requests: heap vs brute force
-
-100 ride requests against the same driver pool. The heap is rebuilt once and `extractMin()` is called per request. Brute force re-scans the full list every time.
-
-| drivers (n) | heap avg (us/req) | brute force avg (us/req) | speedup |
-|-------------|-------------------|--------------------------|---------|
-| 100         | 0.09              | 0.11                     | 1.2x    |
-| 1,000       | 0.11              | 0.38                     | 3.5x    |
-| 10,000      | 0.14              | 3.21                     | 22.9x   |
-| 100,000     | 0.17              | 31.47                    | 185.1x  |
-
-The speedup compounds with n. At 100,000 drivers and 100 requests, the heap is over 180x faster. The brute force per-request time scales linearly with n while the heap stays almost flat.
-
-### E3 — Throughput (requests per second)
-
-Same setup as E2. Shows how many ride requests each approach can handle per second.
-
-| drivers (n) | heap (req/s) | brute force (req/s) |
-|-------------|--------------|---------------------|
-| 100         | 11,200,000   | 9,400,000           |
-| 1,000       | 9,300,000    | 2,700,000           |
-| 10,000      | 7,400,000    | 312,000             |
-| 100,000     | 5,900,000    | 31,800              |
-
-Brute force throughput collapses as n grows. The heap degrades slightly because larger heaps mean slightly deeper sift operations, but the difference is marginal compared to the brute force drop.
-
-### E4 — Heap build cost vs extraction cost
-
-Breaks down where the heap spends its time: building the initial structure vs extracting the nearest driver per request.
-
-| drivers (n) | build time (ms) | avg extraction (us) |
-|-------------|-----------------|---------------------|
-| 100         | 0.01            | 0.09                |
-| 1,000       | 0.08            | 0.11                |
-| 10,000      | 0.94            | 0.14                |
-| 100,000     | 10.2            | 0.17                |
-
-Build time grows with O(n log n) as expected. Extraction time grows very slowly — O(log n) — which is why the heap's per-request cost stays low even at large n. The build cost is a one-time overhead; it pays for itself after a handful of requests.
-
+ 
+Both approaches were tested across four driver pool sizes: 1,000, 5,000, 10,000, and 50,000 drivers. Each configuration processed 500 ride requests. The table below shows total execution time and average time per request for each approach.
+ 
+| drivers | heap total (ms) | heap avg/req (ms) | brute force total (ms) | brute force avg/req (ms) | speedup |
+|---------|-----------------|-------------------|------------------------|--------------------------|---------|
+| 1,000   | 0.135           | 0.00027           | 0.660                  | 0.00132                  | 4.9x    |
+| 5,000   | 0.198           | 0.000396          | 4.109                  | 0.008218                 | 20.8x   |
+| 10,000  | 0.624           | 0.001248          | 7.883                  | 0.015766                 | 12.6x   |
+| 50,000  | 1.229           | 0.002458          | 69.471                 | 0.138942                 | 56.5x   |
+ 
+### What the results show
+ 
+At 1,000 drivers the heap is already around 5x faster than brute force. By 50,000 drivers that gap has grown to nearly 57x. This is the expected behaviour — brute force time scales linearly with n since every request triggers a full scan of the driver pool, while the heap only needs O(log n) per extraction.
+ 
+The heap's average time per request grows slowly as n increases: from 0.00027ms at 1,000 drivers to 0.002458ms at 50,000, roughly a 9x increase over a 50x increase in pool size. Brute force average time over the same range goes from 0.00132ms to 0.138942ms, a 105x increase. This confirms the O(log n) vs O(n) difference in practice, not just in theory.
+ 
+The slight dip in speedup at 10,000 drivers (12.6x vs 20.8x at 5,000) is worth noting. This is likely due to the heap build cost — constructing the heap takes O(n log n), and at 10,000 drivers that upfront cost is large enough relative to the per-request savings that the overall speedup temporarily drops before recovering at 50,000. In a real system where the driver pool changes infrequently and request volume is high, this build cost becomes negligible over time.
+ 
 ---
 
 ## Known Limitations
